@@ -1,0 +1,11 @@
+#!/system/bin/sh
+# Fix permission.
+# Some ROMs have incorrect /dev/smd27 permission 
+# so that libgps.so v1.4+ cannot read NMEA sentences from it.  
+# 
+# script author: tytung
+
+chown system.system /dev/smd27
+chmod 777 /dev/smd27
+
+exit 0

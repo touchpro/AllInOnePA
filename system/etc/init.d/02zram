@@ -1,0 +1,28 @@
+#!/system/bin/sh
+##############################################
+###        Simple zRam handler             ###
+###      Copyright @ Munjeni 2012          ###
+##############################################
+
+# handle zRam
+PROP=`getprop persist.service.zram`
+if [[ $PROP > 0 ]]; then
+	SYSFS_PATH=/sys/block/zram0
+	DEVPATH=/dev/block/zram0
+#	SWAPPINESS=`cat /proc/sys/vm/swappiness`
+	MEMTOTAL=$( awk '{ if ($1 eq "MemTotal:") print $2 ;exit }' </proc/meminfo )
+	MKSWAP=`which mkswap`
+	SWAPON=`which swapon`
+
+#	if [ ! "SWAPPINESS" = "30" ]; then
+#		echo 30 > /proc/sys/vm/swappiness
+#	fi
+
+	CCSIZE=$(($(($MEMTOTAL * $PROP)) / 100))
+	echo 1 > $SYSFS_PATH/reset
+	echo "$(($CCSIZE * 1024))" > $SYSFS_PATH/disksize
+	$MKSWAP $DEVPATH
+	$SWAPON $DEVPATH
+fi
+
+exit 0

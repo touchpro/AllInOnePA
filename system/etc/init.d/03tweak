@@ -1,0 +1,37 @@
+#!/system/bin/sh
+########################################################
+###       Simple tweak and crond_startup script      ###
+###             Copyright @ Munjeni 2012             ###
+########################################################
+
+# free pagecache, dentries and inodes
+sync && echo 3 > /proc/sys/vm/drop_caches
+
+# tweak lowmemorykiller... memory all time have 90M free
+MINFREE=`cat /sys/module/lowmemorykiller/parameters/minfree`
+if [ ! "$MINFREE" = "1536,2048,4096,5120,15360,23040" ]; then
+	echo "1536,2048,4096,5120,15360,23040" >/sys/module/lowmemorykiller/parameters/minfree
+fi
+
+# Watch zRam if is enabled
+PROP=`getprop persist.service.zram`
+if [[ $PROP > 0 ]]; then
+	ZRAMUSSED=`cat /proc/swaps | grep /dev/block/zram0 | awk '{print $4}'`
+	if [[ $ZRAMUSSED > 24000 ]]; then
+		swapoff /dev/block/zram0
+		sleep 2
+		swapon /dev/block/zram0
+	fi
+fi
+
+# start crond
+CROND=`which crond`
+CHECKCROND=`ps | grep crond`
+if [[ ! $CHECKCROND ]]; then 
+#	print "Crontab not runing, starting crond..."
+	$CROND -b -S -c /system/etc/cron.d/crontabs
+#else
+#	print "Crontab allready started."
+fi
+
+exit 0    
